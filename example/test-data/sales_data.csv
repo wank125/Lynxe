@@ -1,0 +1,21 @@
+product_name,category,price,quantity,sales_date,region
+Laptop,Electronics,1299.99,15,2024-01-15,North
+Mouse,Electronics,29.99,45,2024-01-16,South
+Keyboard,Electronics,79.99,30,2024-01-17,East
+Monitor,Electronics,399.99,20,2024-01-18,West
+Headphones,Electronics,149.99,35,2024-01-19,North
+Desk Chair,Furniture,249.99,12,2024-01-20,South
+Standing Desk,Furniture,599.99,8,2024-01-21,East
+Bookshelf,Furniture,189.99,18,2024-01-22,West
+Office Lamp,Furniture,59.99,25,2024-01-23,North
+Notebook,Stationery,4.99,100,2024-01-24,South
+Pen Set,Stationery,12.99,80,2024-01-25,East
+Stapler,Stationery,8.99,60,2024-01-26,West
+File Organizer,Stationery,24.99,40,2024-01-27,North
+Whiteboard,Office,129.99,15,2024-01-28,South
+Projector,Office,799.99,5,2024-01-29,East
+Conference Phone,Office,299.99,10,2024-01-30,West
+Webcam,Electronics,89.99,28,2024-02-01,North
+USB Hub,Electronics,34.99,50,2024-02-02,South
+Cable Organizer,Office,19.99,45,2024-02-03,East
+Desk Pad,Stationery,29.99,35,2024-02-04,West
