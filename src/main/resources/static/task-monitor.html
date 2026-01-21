@@ -1,0 +1,808 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lynxe Task Monitor - 实时任务监控</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            min-height: 100vh;
+            color: #e4e4e7;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            backdrop-filter: blur(10px);
+        }
+
+        h1 {
+            font-size: 2rem;
+            margin-bottom: 10px;
+            background: linear-gradient(90deg, #60a5fa, #a78bfa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .subtitle {
+            color: #a1a1aa;
+            font-size: 0.9rem;
+        }
+
+        .control-panel {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .form-row {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+        }
+
+        .form-group {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #d4d4d8;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 12px 16px;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            color: #e4e4e7;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #60a5fa;
+            box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.1);
+        }
+
+        button {
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        button:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(96, 165, 250, 0.3);
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        button.stop-btn {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+        }
+
+        button.stop-btn:hover {
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+        }
+
+        .status-bar {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 16px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 8px;
+            margin-bottom: 24px;
+        }
+
+        .status-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #71717a;
+            animation: pulse 2s infinite;
+        }
+
+        .status-indicator.connected {
+            background: #22c55e;
+        }
+
+        .status-indicator.running {
+            background: #3b82f6;
+        }
+
+        .status-indicator.error {
+            background: #ef4444;
+        }
+
+        .status-indicator.completed {
+            background: #22c55e;
+            animation: none;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .status-text {
+            flex: 1;
+            font-size: 0.9rem;
+        }
+
+        .plan-id-display {
+            font-family: 'Monaco', 'Consolas', monospace;
+            font-size: 0.8rem;
+            color: #a1a1aa;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 4px 8px;
+            border-radius: 4px;
+        }
+
+        .timeline-container {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 24px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .timeline-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .timeline-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+
+        .progress-bar-container {
+            width: 200px;
+            height: 8px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+            border-radius: 4px;
+            transition: width 0.3s ease;
+            width: 0%;
+        }
+
+        .timeline {
+            position: relative;
+            padding-left: 32px;
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 8px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .timeline-item {
+            position: relative;
+            padding: 16px 0;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .timeline-marker {
+            position: absolute;
+            left: -28px;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7rem;
+            background: #27272a;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .timeline-marker.success {
+            background: #22c55e;
+            border-color: #22c55e;
+        }
+
+        .timeline-marker.error {
+            background: #ef4444;
+            border-color: #ef4444;
+        }
+
+        .timeline-marker.running {
+            background: #3b82f6;
+            border-color: #3b82f6;
+            animation: pulse 1.5s infinite;
+        }
+
+        .timeline-content {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 8px;
+            padding: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .step-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 12px;
+        }
+
+        .step-name {
+            font-weight: 600;
+            font-size: 1rem;
+            margin-bottom: 4px;
+        }
+
+        .step-meta {
+            font-size: 0.8rem;
+            color: #a1a1aa;
+        }
+
+        .step-duration {
+            font-family: 'Monaco', 'Consolas', monospace;
+            font-size: 0.8rem;
+            color: #a1a1aa;
+        }
+
+        .think-act-section {
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .turn-item {
+            margin-bottom: 12px;
+        }
+
+        .turn-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .turn-icon {
+            font-size: 1rem;
+        }
+
+        .turn-title {
+            font-size: 0.85rem;
+            color: #d4d4d8;
+        }
+
+        .turn-content {
+            padding: 12px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 6px;
+            font-size: 0.85rem;
+            color: #a1a1aa;
+            white-space: pre-wrap;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .tool-call {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            background: rgba(96, 165, 250, 0.1);
+            border-radius: 6px;
+            margin-top: 8px;
+        }
+
+        .tool-icon {
+            font-size: 1rem;
+        }
+
+        .tool-name {
+            font-family: 'Monaco', 'Consolas', monospace;
+            font-size: 0.8rem;
+            color: #60a5fa;
+            flex: 1;
+        }
+
+        .tool-status {
+            font-size: 0.75rem;
+            padding: 2px 8px;
+            border-radius: 4px;
+        }
+
+        .tool-status.success {
+            background: rgba(34, 197, 94, 0.2);
+            color: #22c55e;
+        }
+
+        .tool-status.error {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #71717a;
+        }
+
+        .empty-state-icon {
+            font-size: 3rem;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+
+        .empty-state-text {
+            font-size: 1rem;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Scrollbar styles */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🚀 Lynxe Task Monitor</h1>
+            <p class="subtitle">实时任务执行监控与时间轴可视化</p>
+        </header>
+
+        <div class="control-panel">
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="toolName">工具名称</label>
+                    <input type="text" id="toolName" placeholder="例如: simple-tool-test" value="simple-tool-test">
+                </div>
+                <div class="form-group">
+                    <label for="serviceGroup">服务组 (可选)</label>
+                    <input type="text" id="serviceGroup" placeholder="例如: test">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="params">参数 (JSON 格式)</label>
+                    <textarea id="params" rows="3" placeholder='{"file_path": "/tmp/test.txt"}'>{
+  "file_path": "/tmp/test.txt"
+}</textarea>
+                </div>
+            </div>
+            <div class="form-row">
+                <button id="runBtn" onclick="startTask()">
+                    <span>▶</span> 运行任务
+                </button>
+                <button id="stopBtn" onclick="stopTask()" class="stop-btn" disabled>
+                    <span>⏹</span> 停止任务
+                </button>
+            </div>
+        </div>
+
+        <div class="status-bar" id="statusBar" style="display: none;">
+            <div class="status-indicator" id="statusIndicator"></div>
+            <div class="status-text" id="statusText">准备就绪</div>
+            <div class="plan-id-display" id="planIdDisplay"></div>
+        </div>
+
+        <div class="timeline-container">
+            <div class="timeline-header">
+                <div class="timeline-title">⏱️ 执行时间轴</div>
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <span id="stepCounter" style="font-size: 0.85rem; color: #a1a1aa;">0 步骤</span>
+                    <div class="progress-bar-container">
+                        <div class="progress-bar" id="progressBar"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="timeline" id="timeline">
+                <div class="empty-state">
+                    <div class="empty-state-icon">📭</div>
+                    <div class="empty-state-text">点击"运行任务"开始监控</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = window.location.origin;
+        let eventSource = null;
+        let currentPlanId = null;
+        let stepCount = 0;
+        let completedSteps = 0;
+
+        // Parse ISO timestamp
+        function parseTimestamp(timestamp) {
+            if (!timestamp) return null;
+            return new Date(timestamp);
+        }
+
+        // Format duration
+        function formatDuration(startTime, endTime) {
+            const start = parseTimestamp(startTime);
+            const end = parseTimestamp(endTime);
+            if (!start || !end) return '-';
+            const diff = (end - start) / 1000;
+            return diff.toFixed(2) + 's';
+        }
+
+        // Create timeline item HTML
+        function createTimelineItem(step, index) {
+            const hasError = hasStepError(step);
+            const statusClass = hasError ? 'error' : 'success';
+            const statusIcon = hasError ? '⚠️' : '✅';
+
+            let thinkActHtml = '';
+            if (step.thinkActSteps && step.thinkActSteps.length > 0) {
+                thinkActHtml = '<div class="think-act-section">';
+                step.thinkActSteps.forEach(ta => {
+                    thinkActHtml += `
+                        <div class="turn-item">
+                            <div class="turn-header">
+                                <span class="turn-icon">💭</span>
+                                <span class="turn-title">Turn ${ta.turnNumber}</span>
+                            </div>
+                            ${ta.thinkInput ? `<div class="turn-content">${escapeHtml(ta.thinkInput)}</div>` : ''}
+                            ${ta.actToolInfoList && ta.actToolInfoList.length > 0 ? ta.actToolInfoList.map(tool => {
+                                const toolStatus = tool.toolExecuteStatus === 'success' ? 'success' : 'error';
+                                const toolIcon = tool.toolExecuteStatus === 'success' ? '✅' : '❌';
+                                return `
+                                    <div class="tool-call">
+                                        <span class="tool-icon">${toolIcon}</span>
+                                        <span class="tool-name">${escapeHtml(tool.toolName)}</span>
+                                        <span class="tool-status ${toolStatus}">${tool.toolExecuteStatus}</span>
+                                    </div>
+                                `;
+                            }).join('') : ''}
+                        </div>
+                    `;
+                });
+                thinkActHtml += '</div>';
+            }
+
+            return `
+                <div class="timeline-item">
+                    <div class="timeline-marker ${statusClass}">${statusIcon}</div>
+                    <div class="timeline-content">
+                        <div class="step-header">
+                            <div>
+                                <div class="step-name">${escapeHtml(step.stepName || `Step ${index + 1}`)}</div>
+                                <div class="step-meta">Step ID: ${escapeHtml(step.stepId || 'N/A')}</div>
+                            </div>
+                            <div class="step-duration">${formatDuration(step.startTime, step.endTime)}</div>
+                        </div>
+                        ${thinkActHtml}
+                    </div>
+                </div>
+            `;
+        }
+
+        // Check if step has errors
+        function hasStepError(step) {
+            if (!step.thinkActSteps) return false;
+            return step.thinkActSteps.some(ta => {
+                if (!ta.actToolInfoList) return false;
+                return ta.actToolInfoList.some(tool => tool.toolExecuteStatus !== 'success');
+            });
+        }
+
+        // Escape HTML
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Update status display
+        function updateStatus(type, message, planId = null) {
+            const statusBar = document.getElementById('statusBar');
+            const statusIndicator = document.getElementById('statusIndicator');
+            const statusText = document.getElementById('statusText');
+            const planIdDisplay = document.getElementById('planIdDisplay');
+
+            statusBar.style.display = 'flex';
+            statusIndicator.className = 'status-indicator ' + type;
+            statusText.textContent = message;
+
+            if (planId) {
+                planIdDisplay.textContent = planId;
+                planIdDisplay.style.display = 'block';
+            }
+        }
+
+        // Update progress
+        function updateProgress(current, total) {
+            const percentage = total > 0 ? Math.min(100, (current / total) * 100) : 0;
+            document.getElementById('progressBar').style.width = percentage + '%';
+            document.getElementById('stepCounter').textContent = `${current} 步骤`;
+        }
+
+        // Start task
+        async function startTask() {
+            const toolName = document.getElementById('toolName').value.trim();
+            const serviceGroup = document.getElementById('serviceGroup').value.trim();
+            const paramsText = document.getElementById('params').value.trim();
+
+            if (!toolName) {
+                alert('请输入工具名称');
+                return;
+            }
+
+            let params = {};
+            if (paramsText) {
+                try {
+                    params = JSON.parse(paramsText);
+                } catch (e) {
+                    alert('参数 JSON 格式错误: ' + e.message);
+                    return;
+                }
+            }
+
+            // Disable run button
+            document.getElementById('runBtn').disabled = true;
+            document.getElementById('stopBtn').disabled = false;
+
+            // Clear timeline
+            const timeline = document.getElementById('timeline');
+            timeline.innerHTML = `
+                <div class="empty-state">
+                    <div class="empty-state-icon">
+                        <span class="spinner"></span>
+                    </div>
+                    <div class="empty-state-text">正在启动任务...</div>
+                </div>
+            `;
+
+            try {
+                // Start task
+                const requestBody = {
+                    toolName: toolName,
+                    replacementParams: Object.keys(params).length > 0 ? params : null
+                };
+                if (serviceGroup) {
+                    requestBody.serviceGroup = serviceGroup;
+                }
+
+                const response = await fetch(`${API_BASE}/api/executor/executeByToolNameAsync`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(requestBody)
+                });
+
+                if (!response.ok) {
+                    throw new Error('启动任务失败: ' + response.status);
+                }
+
+                const result = await response.json();
+                currentPlanId = result.planId;
+
+                if (!currentPlanId) {
+                    throw new Error('未返回 planId');
+                }
+
+                // Connect to SSE stream
+                connectToStream(currentPlanId);
+
+            } catch (error) {
+                updateStatus('error', '错误: ' + error.message);
+                document.getElementById('runBtn').disabled = false;
+                document.getElementById('stopBtn').disabled = true;
+                timeline.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">❌</div>
+                        <div class="empty-state-text">${escapeHtml(error.message)}</div>
+                    </div>
+                `;
+            }
+        }
+
+        // Connect to SSE stream
+        function connectToStream(planId) {
+            if (eventSource) {
+                eventSource.close();
+            }
+
+            stepCount = 0;
+            completedSteps = 0;
+
+            const timeline = document.getElementById('timeline');
+            timeline.innerHTML = '';
+
+            updateStatus('running', '正在执行...', planId);
+
+            eventSource = new EventSource(`${API_BASE}/api/executor/stream/${planId}`);
+
+            eventSource.onmessage = (event) => {
+                try {
+                    const data = JSON.parse(event.data);
+
+                    switch (data.type) {
+                        case 'connected':
+                            updateStatus('connected', '已连接，等待执行...', planId);
+                            break;
+
+                        case 'progress':
+                            updateStatus('running', '执行中...', planId);
+                            if (data.newSteps && data.newSteps.length > 0) {
+                                data.newSteps.forEach((step, idx) => {
+                                    const stepIndex = stepCount;
+                                    stepCount++;
+                                    completedSteps = data.stepCount || stepCount;
+
+                                    // Append new step to timeline
+                                    const tempDiv = document.createElement('div');
+                                    tempDiv.innerHTML = createTimelineItem(step, stepIndex);
+                                    timeline.appendChild(tempDiv.firstElementChild);
+
+                                    // Auto-scroll to bottom
+                                    timeline.scrollTop = timeline.scrollHeight;
+                                });
+
+                                // Update progress (estimate 5-10 steps total)
+                                const estimatedTotal = 10;
+                                updateProgress(completedSteps, estimatedTotal);
+                            }
+                            break;
+
+                        case 'done':
+                            updateStatus('completed', '✅ 任务完成！', planId);
+                            updateProgress(completedSteps, completedSteps);
+                            document.getElementById('runBtn').disabled = false;
+                            document.getElementById('stopBtn').disabled = true;
+                            eventSource.close();
+                            break;
+
+                        case 'error':
+                            updateStatus('error', '❌ 错误: ' + data.message, planId);
+                            document.getElementById('runBtn').disabled = false;
+                            document.getElementById('stopBtn').disabled = true;
+                            eventSource.close();
+                            break;
+                    }
+
+                } catch (e) {
+                    console.error('Failed to parse SSE data:', e);
+                }
+            };
+
+            eventSource.onerror = (error) => {
+                console.error('SSE error:', error);
+                updateStatus('error', '连接中断', planId);
+                document.getElementById('runBtn').disabled = false;
+                document.getElementById('stopBtn').disabled = true;
+                eventSource.close();
+            };
+        }
+
+        // Stop task
+        async function stopTask() {
+            if (!currentPlanId) return;
+
+            try {
+                const response = await fetch(`${API_BASE}/api/executor/stopTask/${currentPlanId}`, {
+                    method: 'POST'
+                });
+
+                if (!response.ok) {
+                    throw new Error('停止任务失败: ' + response.status);
+                }
+
+                updateStatus('error', '⏹ 任务已停止', currentPlanId);
+
+                if (eventSource) {
+                    eventSource.close();
+                }
+
+                document.getElementById('runBtn').disabled = false;
+                document.getElementById('stopBtn').disabled = true;
+
+            } catch (error) {
+                alert('停止任务失败: ' + error.message);
+            }
+        }
+
+        // Cleanup on page unload
+        window.addEventListener('beforeunload', () => {
+            if (eventSource) {
+                eventSource.close();
+            }
+        });
+    </script>
+</body>
+</html>
