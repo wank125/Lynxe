@@ -1,0 +1,104 @@
+[
+  {
+    "title": "complex-data-workflow",
+    "steps": [
+      {
+        "stepRequirement": "Step 1: Data Acquisition and Validation\n\nYou are a data acquisition specialist. Your task is to:\n1. Read the input file from <<input_path>>\n2. Validate the file exists and contains data\n3. Count the total records/lines\n4. Detect the data format (CSV, JSON, text)\n5. If file doesn't exist, use error-report-tool to report the issue\n6. Complete with default-terminate providing: file_status, record_count, data_format\n\nYou MUST call tools in order. Do not provide answers directly.",
+        "agentName": "",
+        "modelName": "",
+        "maxSteps": 10,
+        "terminateColumns": "file_status,record_count,data_format",
+        "selectedToolKeys": [
+          "fs-read-file-operator",
+          "fs-count-file",
+          "error-report-tool",
+          "default-terminate"
+        ]
+      },
+      {
+        "stepRequirement": "Step 2: Data Cleaning and Transformation\n\nYou are a data cleaning specialist. Based on the validated file from Step 1:\n1. Read the file content again\n2. Apply the following cleaning operations:\n   - Remove empty lines\n   - Trim whitespace from each line\n   - Remove duplicate lines\n   - Fix common formatting issues\n3. If cleaning produces no data, use fs-replace-file-operator to create sample data\n4. Count statistics: original_lines, cleaned_lines, duplicates_removed, empty_lines_removed\n5. Save cleaned data to a temporary file\n6. Complete with default-terminate providing: cleaning_stats, cleaned_data_path\n\nYou MUST call tools to perform the cleaning operations.",
+        "agentName": "",
+        "modelName": "",
+        "maxSteps": 15,
+        "terminateColumns": "cleaning_stats,cleaned_data_path",
+        "selectedToolKeys": [
+          "fs-read-file-operator",
+          "fs-write-file-operator",
+          "fs-replace-file-operator",
+          "fs-count-file",
+          "error-report-tool",
+          "default-terminate"
+        ]
+      },
+      {
+        "stepRequirement": "Step 3: Data Analysis and Enrichment\n\nYou are a data analyst. Your task is to:\n1. Read the cleaned data from Step 2\n2. Perform analysis based on data type:\n   - For CSV: Count columns, detect data types, find min/max for numeric columns\n   - For JSON: Extract keys, count nested objects, validate structure\n   - For text: Count words, find longest/shortest lines, detect patterns\n3. Generate insights:\n   - Data quality score (0-100)\n   - Completeness percentage\n   - Anomaly detection results\n4. If analysis fails, use error-report-tool and attempt recovery\n5. Complete with default-terminate providing: analysis_results, insights, data_quality_score\n\nYou MUST call tools to read data and perform analysis.",
+        "agentName": "",
+        "modelName": "",
+        "maxSteps": 12,
+        "terminateColumns": "analysis_results,insights,data_quality_score",
+        "selectedToolKeys": [
+          "fs-read-file-operator",
+          "fs-write-file-operator",
+          "error-report-tool",
+          "default-terminate"
+        ]
+      },
+      {
+        "stepRequirement": "Step 4: Report Generation\n\nYou are a report generation specialist. Compile all results:\n1. Create a comprehensive Markdown report including:\n   - Executive Summary\n   - Input Data Information (from Step 1)\n   - Cleaning Process (from Step 2)\n   - Analysis Results (from Step 3)\n   - Data Quality Assessment\n   - Recommendations\n2. The report should be well-formatted with:\n   - Headers (##, ###)\n   - Bullet points for lists\n   - Tables where appropriate\n   - Code blocks for data samples\n3. Save the report to: <<output_path>>\n4. Complete with default-terminate providing: report_path, summary\n\nYou MUST call fs-write-file-operator to save the report.",
+        "agentName": "",
+        "modelName": "",
+        "maxSteps": 10,
+        "terminateColumns": "report_path,summary",
+        "selectedToolKeys": [
+          "fs-read-file-operator",
+          "fs-write-file-operator",
+          "default-terminate"
+        ]
+      },
+      {
+        "stepRequirement": "Step 5: Final Verification and Archival\n\nYou are a quality assurance specialist. Your task is to:\n1. Verify the report exists at <<output_path>>\n2. Read and validate the report content:\n   - Check all sections are present\n   - Verify data accuracy\n   - Ensure formatting is correct\n3. Create a summary manifest:\n   - Processing timestamp\n   - Input file: <<input_path>>\n   - Output file: <<output_path>>\n   - Total steps completed\n   - Success/failure status\n4. Save manifest to <<output_path>>.manifest\n5. If any issues found, use error-report-tool to document them\n6. Complete with default-terminate providing: verification_status, manifest_path, final_summary\n\nYou MUST call tools to verify and create the manifest.",
+        "agentName": "",
+        "modelName": "",
+        "maxSteps": 10,
+        "terminateColumns": "verification_status,manifest_path,final_summary",
+        "selectedToolKeys": [
+          "fs-read-file-operator",
+          "fs-write-file-operator",
+          "fs-replace-file-operator",
+          "error-report-tool",
+          "default-terminate"
+        ]
+      }
+    ],
+    "planType": "dynamic_agent",
+    "serviceGroup": "data-processing",
+    "maxSteps": 25,
+    "toolConfig": {
+      "toolDescription": "Complex multi-step data processing workflow: acquisition → cleaning → analysis → reporting → verification. Demonstrates full error handling and recovery capabilities.",
+      "enableInternalToolcall": true,
+      "enableHttpService": true,
+      "enableInConversation": false,
+      "publishStatus": "PUBLISHED",
+      "inputSchema": [
+        {
+          "name": "input_path",
+          "description": "Path to the input data file to process",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "output_path",
+          "description": "Path where the final report should be saved",
+          "type": "string",
+          "required": true
+        }
+      ]
+    },
+    "createTime": "2026-01-22T00:10:00.000000",
+    "updateTime": "2026-01-22T00:10:00.000000",
+    "version": "4.10.4",
+    "planTemplateId": "planTemplate-complex-data-workflow",
+    "accessLevel": "editable",
+    "readOnly": false
+  }
+]
