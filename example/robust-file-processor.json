@@ -1,0 +1,89 @@
+[
+  {
+    "title": "robust-file-processor",
+    "steps": [
+      {
+        "stepRequirement": "Step 1: File Reading and Initial Validation\n\nYou are a file processing specialist. Your task is to:\n1. Read the file from path: <<input_file>>\n2. Validate that the file exists and is readable\n3. Count the lines/records in the file\n4. Detect the file format (CSV, JSON, text, etc.)\n\nIMPORTANT: You MUST call tools in order:\n1. First, use fs-read-file-operator to read the file\n2. Then use fs-count-file to verify line count\n3. Finally call default-terminate with BOTH results\n\nIf the file doesn't exist or has errors, use error-report-tool to report the issue.",
+        "agentName": "",
+        "modelName": "",
+        "maxSteps": 10,
+        "terminateColumns": "read_result,line_count",
+        "selectedToolKeys": [
+          "fs-read-file-operator",
+          "fs-count-file",
+          "error-report-tool",
+          "default-terminate"
+        ]
+      },
+      {
+        "stepRequirement": "Step 2: Error Detection and Recovery Planning\n\nYou are an error recovery specialist. Based on the result from Step 1:\n\nIf Step 1 succeeded:\n- Confirm the file is valid\n- Report the file format and size\n- Proceed to next step\n\nIf Step 1 failed with errors:\n1. Analyze the error type:\n   - File not found → Check if path is correct\n   - Permission denied → Check file permissions\n   - Invalid format → Suggest format conversion\n2. Determine if recovery is possible\n3. If recovery is possible, use fs-replace-file-operator to create a corrected version\n4. If recovery is not possible, report the failure clearly\n\nYou MUST call tools to handle the error condition.",
+        "agentName": "",
+        "modelName": "",
+        "maxSteps": 15,
+        "terminateColumns": "recovery_status",
+        "selectedToolKeys": [
+          "fs-read-file-operator",
+          "fs-replace-file-operator",
+          "fs-count-file",
+          "error-report-tool",
+          "default-terminate"
+        ]
+      },
+      {
+        "stepRequirement": "Step 3: Data Processing and Transformation\n\nYou are a data transformation expert. Your task is to:\n1. Process the validated file content from Step 2\n2. Apply the following transformations:\n   - Remove empty lines\n   - Trim whitespace from each line\n   - Fix common formatting issues\n3. Count statistics:\n   - Total lines after cleaning\n   - Number of empty lines removed\n   - Number of formatting fixes applied\n4. If any errors occur during processing, use fs-replace-file-operator to fix them\n\nUse default-terminate with:\n- processed_result: The cleaned/transformed content\n- stats: Processing statistics",
+        "agentName": "",
+        "modelName": "",
+        "maxSteps": 12,
+        "terminateColumns": "processed_result,stats",
+        "selectedToolKeys": [
+          "fs-read-file-operator",
+          "fs-replace-file-operator",
+          "fs-count-file",
+          "default-terminate"
+        ]
+      },
+      {
+        "stepRequirement": "Step 4: Final Report Generation\n\nYou are a report generator. Compile all results from previous steps:\n1. Create a comprehensive summary including:\n   - Original file status\n   - Any errors encountered and how they were resolved\n   - Processing statistics\n   - Final output location\n2. Generate a well-formatted Markdown report\n3. Use fs-write-file-operator to save the report to: <<output_file>>\n\nThe report should include:\n- # File Processing Report\n- ## Input File: <<input_file>>\n- ## Processing Steps\n- ## Errors Detected (if any)\n- ## Recovery Actions (if any)\n- ## Final Statistics\n- ## Output Location: <<output_file>>\n\nFinally call default-terminate with the report summary.",
+        "agentName": "",
+        "modelName": "",
+        "maxSteps": 10,
+        "terminateColumns": "report_summary",
+        "selectedToolKeys": [
+          "fs-read-file-operator",
+          "fs-write-file-operator",
+          "default-terminate"
+        ]
+      }
+    ],
+    "planType": "dynamic_agent",
+    "serviceGroup": "file-processing",
+    "maxSteps": 20,
+    "toolConfig": {
+      "toolDescription": "Robust multi-step file processor with error handling and recovery: read → validate → recover → process → report",
+      "enableInternalToolcall": true,
+      "enableHttpService": true,
+      "enableInConversation": false,
+      "publishStatus": "PUBLISHED",
+      "inputSchema": [
+        {
+          "name": "input_file",
+          "description": "Path to the input file to process",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "output_file",
+          "description": "Path where the final report should be saved",
+          "type": "string",
+          "required": true
+        }
+      ]
+    },
+    "createTime": "2026-01-21T23:50:00.000000",
+    "updateTime": "2026-01-21T23:50:00.000000",
+    "version": "4.10.4",
+    "planTemplateId": "planTemplate-robust-file-processor",
+    "accessLevel": "editable",
+    "readOnly": false
+  }
+]

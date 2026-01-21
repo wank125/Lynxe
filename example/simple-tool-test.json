@@ -1,0 +1,43 @@
+[
+  {
+    "title": "simple-tool-test",
+    "steps": [
+      {
+        "stepRequirement": "You must call tools in order. Do NOT provide answers directly.\n\nTask: Read the file <<file_path>> and count the lines.\n\nSTEPS YOU MUST FOLLOW:\n1. Call fs-read-file-operator with the file path\n2. Wait for the result\n3. Call fs-count-file with the file path\n4. Wait for the result\n5. Call default-terminate with BOTH results\n\nIMPORTANT: You MUST call the tools above. Do NOT skip tool calls.",
+        "agentName": "",
+        "modelName": "",
+        "maxSteps": 10,
+        "terminateColumns": "result",
+        "selectedToolKeys": [
+          "fs-read-file-operator",
+          "fs-count-file",
+          "default-terminate"
+        ]
+      }
+    ],
+    "planType": "dynamic_agent",
+    "serviceGroup": "test",
+    "maxSteps": 15,
+    "toolConfig": {
+      "toolDescription": "Simple test to force tool calls",
+      "enableInternalToolcall": true,
+      "enableHttpService": true,
+      "enableInConversation": false,
+      "publishStatus": "PUBLISHED",
+      "inputSchema": [
+        {
+          "name": "file_path",
+          "description": "Path to file",
+          "type": "string",
+          "required": true
+        }
+      ]
+    },
+    "createTime": "2026-01-21T23:40:00.000000",
+    "updateTime": "2026-01-21T23:40:00.000000",
+    "version": "4.10.4",
+    "planTemplateId": "planTemplate-simple-tool-test",
+    "accessLevel": "editable",
+    "readOnly": false
+  }
+]

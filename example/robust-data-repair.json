@@ -1,0 +1,45 @@
+{
+    "title": "robust-data-repair-workflow",
+    "steps": [
+        {
+            "stepRequirement": "Step 1: Data Validation and Repair\n\nYou are a data integrity specialist.\nYour task is to:\n1. Read the data file: <<file_path>>\n2. Check if the file format is valid comma-separated values (CSV).\n3. If you detect semicolons (;) or other delimiters being used instead of commas, or if the structure is inconsistent:\n   a. Explicitly state the error found.\n   b. Use `fs-write-file-operator` to re-write the file with correct standard CSV formatting (comma-separated, no extra spaces).\n   c. Verify the file is now readable.\n4. If the file is already valid, state that no repair is needed.\n\nOutput a summary of the validation checks and any repair actions taken.",
+            "agentName": "",
+            "modelName": "",
+            "terminateColumns": "validation_summary",
+            "selectedToolKeys": [
+                "fs-read-file-operator",
+                "fs-write-file-operator",
+                "default-terminate"
+            ]
+        },
+        {
+            "stepRequirement": "Step 2: Data Analysis\n\nYou are a data analyst. Based on the validated file from the previous step:\n\nYour task is to:\n1. Read the (potentially repaired) file: <<file_path>>\n2. Calculate total sales revenue (price * quantity if available, otherwise just sum of price).\n3. Identify the most expensive product.\n\nGenerate a brief analysis report.",
+            "agentName": "",
+            "modelName": "",
+            "terminateColumns": "analysis_report",
+            "selectedToolKeys": [
+                "fs-read-file-operator",
+                "default-terminate"
+            ]
+        }
+    ],
+    "planType": "dynamic_agent",
+    "serviceGroup": "data-repair",
+    "maxSteps": 10,
+    "toolConfig": {
+        "toolDescription": "A robust workflow that validates and repairs data files before analysis.",
+        "enableInternalToolcall": true,
+        "enableHttpService": true,
+        "enableInConversation": false,
+        "publishStatus": "PUBLISHED",
+        "inputSchema": [
+            {
+                "name": "file_path",
+                "description": "Path to the data file",
+                "type": "string",
+                "required": true
+            }
+        ]
+    },
+    "planTemplateId": "planTemplate-robust-data-repair-workflow"
+}

@@ -1,0 +1,249 @@
+[
+  {
+    "title": "data-analysis-workflow",
+    "steps": [
+      {
+        "stepRequirement": "Step 1: Data Collection\n\nYou are a data collection specialist. Your task is to:\n1. Read the data file from the path: <<file_path>>\n2. Extract the raw data content\n3. Count the total number of records\n4. Identify the data format (CSV, JSON, or text)\n\nUse the fs-read-file-operator tool to read the file.\nAfter reading, call default-terminate with a summary containing:\n- Total records found\n- Data format detected\n- First 3 records as sample",
+        "agentName": "",
+        "modelName": "",
+        "terminateColumns": "data_summary",
+        "selectedToolKeys": [
+          "fs-read-file-operator",
+          "default-terminate"
+        ]
+      },
+      {
+        "stepRequirement": "Step 2: Data Validation\n\nYou are a data quality specialist. Based on the data summary from Step 1:\n\nYour task is to:\n1. Validate the data structure\n2. Check for missing values\n3. Identify any data quality issues\n4. Calculate data completeness percentage\n\nProvide a validation report including:\n- Data quality score (0-100)\n- List of issues found\n- Recommendations for data cleaning",
+        "agentName": "",
+        "modelName": "",
+        "terminateColumns": "validation_report",
+        "selectedToolKeys": [
+          "default-terminate"
+        ]
+      },
+      {
+        "stepRequirement": "Step 3: Data Analysis\n\nYou are a data analyst. Based on the validation report from Step 2:\n\nYour task is to:\n1. Perform statistical analysis on the data\n2. Calculate key metrics (mean, median, standard deviation)\n3. Identify trends and patterns\n4. Find correlations between variables\n5. Detect outliers or anomalies\n\nProvide an analysis report with:\n- Key statistical findings\n- Top 5 insights discovered\n- Notable patterns or trends\n- Anomalies detected",
+        "agentName": "",
+        "modelName": "",
+        "terminateColumns": "analysis_report",
+        "selectedToolKeys": [
+          "default-terminate"
+        ]
+      },
+      {
+        "stepRequirement": "Step 4: Visualization Planning\n\nYou are a data visualization expert. Based on the analysis report from Step 3:\n\nYour task is to:\n1. Design appropriate visualizations for the key findings\n2. Recommend chart types (bar, line, pie, scatter, etc.)\n3. Suggest color schemes and layouts\n4. Plan the dashboard structure\n\nCreate a visualization plan including:\n- List of recommended charts (at least 3)\n- Data points to visualize in each chart\n- Visual design recommendations\n- Dashboard layout suggestion",
+        "agentName": "",
+        "modelName": "",
+        "terminateColumns": "visualization_plan",
+        "selectedToolKeys": [
+          "default-terminate"
+        ]
+      },
+      {
+        "stepRequirement": "Step 5: Final Report Generation\n\nYou are a report writer. Compile all previous outputs (Data Summary, Validation Report, Analysis Report, Visualization Plan).\n\nYour task is to:\n1. Create a comprehensive executive summary\n2. Organize all findings into a structured report\n3. Highlight key recommendations\n4. Provide actionable next steps\n\nGenerate a final report (format as Markdown) with sections:\n1. Executive Summary\n2. Data Overview\n3. Quality Assessment\n4. Key Findings\n5. Visualizations Recommended\n6. Conclusions and Recommendations\n7. Next Steps\n\nUse fs-write-file-operator to save the report to: <<output_path>>",
+        "agentName": "",
+        "modelName": "",
+        "terminateColumns": "final_report",
+        "selectedToolKeys": [
+          "fs-write-file-operator",
+          "default-terminate"
+        ]
+      }
+    ],
+    "planType": "dynamic_agent",
+    "serviceGroup": "data-analysis",
+    "maxSteps": 10,
+    "toolConfig": {
+      "toolDescription": "Multi-step data analysis workflow: collection → validation → analysis → visualization → reporting",
+      "enableInternalToolcall": true,
+      "enableHttpService": true,
+      "enableInConversation": false,
+      "publishStatus": "PUBLISHED",
+      "inputSchema": [
+        {
+          "name": "file_path",
+          "description": "Path to the data file to analyze",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "output_path",
+          "description": "Path where the final report should be saved",
+          "type": "string",
+          "required": true
+        }
+      ]
+    },
+    "createTime": "2026-01-21T22:25:00.000000",
+    "updateTime": "2026-01-21T22:25:00.000000",
+    "version": "4.10.4",
+    "planTemplateId": "planTemplate-data-analysis-workflow",
+    "accessLevel": "editable",
+    "readOnly": false
+  },
+  {
+    "title": "web-research-workflow",
+    "steps": [
+      {
+        "stepRequirement": "Step 1: Topic Analysis\n\nYou are a research planner. Analyze the research topic: <<topic>>\n\nIdentify:\n1. Key keywords for search\n2. Specific questions to answer\n3. Relevant domains/sources to target\n\nOutput a search plan.",
+        "agentName": "",
+        "modelName": "",
+        "terminateColumns": "search_plan",
+        "selectedToolKeys": [
+          "default-terminate"
+        ]
+      },
+      {
+        "stepRequirement": "Step 2: Information Retrieval\n\nYou are a web researcher. Execute the search plan from Step 1.\nUse available search tools to find relevant information about <<topic>>.\nCollect titles, snippets, and URLs of the top 5 most relevant results.",
+        "agentName": "",
+        "modelName": "",
+        "terminateColumns": "search_results",
+        "selectedToolKeys": [
+          "default-search-tool",
+          "default-terminate"
+        ]
+      },
+      {
+        "stepRequirement": "Step 3: Content Extraction\n\nYou are a content extractor. Select the most promising URL from the search results in Step 2.\nUse browser tools to visit the page and extract the main content.\nSummarize the key points from the page.",
+        "agentName": "",
+        "modelName": "",
+        "terminateColumns": "extracted_content",
+        "selectedToolKeys": [
+          "browser-starte-page-and-get-content",
+          "default-terminate"
+        ]
+      },
+      {
+        "stepRequirement": "Step 4: Information Synthesis\n\nYou are an analyst. Synthesize the findings from the search results and extracted content.\nCreate a coherent summary that answers the original research questions.\nIdentify any gaps in the information.",
+        "agentName": "",
+        "modelName": "",
+        "terminateColumns": "research_summary",
+        "selectedToolKeys": [
+          "default-terminate"
+        ]
+      },
+      {
+        "stepRequirement": "Step 5: Final Research Report\n\nYou are a editor. Compile the final research report based on the synthesis.\nThe report should be in Markdown format and include citations (URLs).\nSave the report to a file named 'research_report.md' in the current directory.",
+        "agentName": "",
+        "modelName": "",
+        "terminateColumns": "final_report",
+        "selectedToolKeys": [
+          "fs-write-file-operator",
+          "default-terminate"
+        ]
+      }
+    ],
+    "planType": "dynamic_agent",
+    "serviceGroup": "web-research",
+    "maxSteps": 15,
+    "toolConfig": {
+      "toolDescription": "Multi-step web research workflow: planning → searching → extraction → synthesis → reporting",
+      "enableInternalToolcall": true,
+      "enableHttpService": true,
+      "enableInConversation": false,
+      "publishStatus": "PUBLISHED",
+      "inputSchema": [
+        {
+          "name": "topic",
+          "description": "The topic to research",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "output_file",
+          "description": "Path where the research report should be saved",
+          "type": "string",
+          "required": true
+        }
+      ]
+    },
+    "createTime": "2026-01-21T22:25:00.000000",
+    "updateTime": "2026-01-21T22:25:00.000000",
+    "version": "4.10.4",
+    "planTemplateId": "planTemplate-web-research-workflow",
+    "accessLevel": "editable",
+    "readOnly": false
+  },
+  {
+    "title": "code-review-workflow",
+    "steps": [
+      {
+        "stepRequirement": "Step 1: Code Retrieval\n\nYou are a code integration specialist. Read the source code file at: <<source_file_path>>\nCount the lines of code and identify the programming language.\nOutput the code content and metadata.",
+        "agentName": "",
+        "modelName": "",
+        "terminateColumns": "code_content",
+        "selectedToolKeys": [
+          "fs-read-file-operator",
+          "default-terminate"
+        ]
+      },
+      {
+        "stepRequirement": "Step 2: Syntax & Style Check\n\nYou are a linter. Analyze the code content from Step 1 for syntax errors and style violations.\nCheck for:\n- Indentation issues\n- Naming conventions\n- Missing comments/documentation\n\nOutput a list of style issues.",
+        "agentName": "",
+        "modelName": "",
+        "terminateColumns": "style_issues",
+        "selectedToolKeys": [
+          "default-terminate"
+        ]
+      },
+      {
+        "stepRequirement": "Step 3: Security Analysis\n\nYou are a security expert. Analyze the code content for potential security vulnerabilities.\nLook for:\n- SQL injection risks\n- Hardcoded credentials\n- Unsafe input handling\n\nOutput a security risk assessment.",
+        "agentName": "",
+        "modelName": "",
+        "terminateColumns": "security_issues",
+        "selectedToolKeys": [
+          "default-terminate"
+        ]
+      },
+      {
+        "stepRequirement": "Step 4: Performance Review\n\nYou are a performance engineer. Analyze the code for efficiency issues.\nLook for:\n- N+1 queries\n- Inefficient algorithms (nested loops)\n- Memory leaks\n\nOutput performance optimization suggestions.",
+        "agentName": "",
+        "modelName": "",
+        "terminateColumns": "performance_issues",
+        "selectedToolKeys": [
+          "default-terminate"
+        ]
+      },
+      {
+        "stepRequirement": "Step 5: Review Report Generation\n\nYou are a lead developer. Consolidate all findings (Style, Security, Performance) into a final Code Review Report.\nFormat as Markdown.\nHighlight 'Critical' issues first.\nSave the report to: <<report_output_path>>",
+        "agentName": "",
+        "modelName": "",
+        "terminateColumns": "review_report",
+        "selectedToolKeys": [
+          "fs-write-file-operator",
+          "default-terminate"
+        ]
+      }
+    ],
+    "planType": "dynamic_agent",
+    "serviceGroup": "code-review",
+    "maxSteps": 20,
+    "toolConfig": {
+      "toolDescription": "Multi-step code review workflow: discovery → quality → security → performance → reporting",
+      "enableInternalToolcall": true,
+      "enableHttpService": true,
+      "enableInConversation": false,
+      "publishStatus": "PUBLISHED",
+      "inputSchema": [
+        {
+          "name": "source_file_path",
+          "description": "Path to the source code file to review",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "report_output_path",
+          "description": "Path where the review report should be saved",
+          "type": "string",
+          "required": true
+        }
+      ]
+    },
+    "createTime": "2026-01-21T22:25:00.000000",
+    "updateTime": "2026-01-21T22:25:00.000000",
+    "version": "4.10.4",
+    "planTemplateId": "planTemplate-code-review-workflow",
+    "accessLevel": "editable",
+    "readOnly": false
+  }
+]
