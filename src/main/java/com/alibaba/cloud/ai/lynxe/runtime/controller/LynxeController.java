@@ -1564,4 +1564,153 @@ public class LynxeController implements LynxeListener<PlanExceptionEvent> {
 		return emitter;
 	}
 
+	/**
+	 * Stream task execution progress via SSE
+	 * @param planId The plan ID to monitor
+	 * @return SSE stream with execution progress updates
+	 */
+	@GetMapping(value = "/stream/{planId}", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+	public SseEmitter streamExecutionProgress(@PathVariable("planId") String planId) {
+		logger.info("Setting up SSE stream for planId: {}", planId);
+
+		// Create SSE emitter with 5 minute timeout
+		SseEmitter emitter = new SseEmitter(300000L);
+
+		// Register handlers
+		emitter.onTimeout(() -> {
+			logger.warn("SSE emitter timeout for planId: {}", planId);
+			emitter.complete();
+		});
+
+		emitter.onError((ex) -> {
+			logger.error("SSE emitter error for planId: {}", planId, ex);
+			emitter.completeWithError(ex);
+		});
+
+		// Store last known state to detect changes
+		final boolean[] lastCompleted = {false};
+		final int[] lastStepCount = {0};
+		final boolean[] streamActive = {true};
+
+		// Register completion callback to mark stream as inactive
+		emitter.onCompletion(() -> {
+			logger.info("SSE stream completed for planId: {}", planId);
+			streamActive[0] = false;
+		});
+
+		// Execute polling in async task
+		CompletableFuture.runAsync(() -> {
+			try {
+				// Send initial connection event
+				Map<String, Object> connectedData = new HashMap<>();
+				connectedData.put("type", "connected");
+				connectedData.put("planId", planId);
+				emitter.send(SseEmitter.event().data(objectMapper.writeValueAsString(connectedData)));
+
+				// Poll for updates until completion
+				while (streamActive[0]) {
+					try {
+						// Get current execution details
+						PlanExecutionRecord planRecord = planHierarchyReaderService.readPlanTreeByRootId(planId);
+
+						if (planRecord == null) {
+							// Task not found
+							Map<String, Object> notFoundData = new HashMap<>();
+							notFoundData.put("type", "error");
+							notFoundData.put("message", "Plan not found: " + planId);
+							emitter.send(SseEmitter.event().data(objectMapper.writeValueAsString(notFoundData)));
+							emitter.complete();
+							break;
+						}
+
+						// Check for user input wait state
+						String rootPlanId = planRecord.getRootPlanId() != null ? planRecord.getRootPlanId() : planId;
+						UserInputWaitState waitState = userInputService.getWaitState(rootPlanId);
+						if (waitState != null && waitState.isWaiting()) {
+							waitState.setPlanId(rootPlanId);
+							planRecord.setUserInputWaitState(waitState);
+						}
+
+						// Get current step count
+						List<AgentExecutionRecord> agentSequence = planRecord.getAgentExecutionSequence();
+						int currentStepCount = agentSequence != null ? agentSequence.size() : 0;
+						boolean isCompleted = planRecord.isCompleted();
+
+						// Detect changes and send updates
+						if (currentStepCount > lastStepCount[0] || isCompleted != lastCompleted[0]) {
+							// Build progress update
+							Map<String, Object> progressData = new HashMap<>();
+							progressData.put("type", "progress");
+							progressData.put("planId", planRecord.getRootPlanId());
+							progressData.put("currentPlanId", planRecord.getCurrentPlanId());
+							progressData.put("completed", isCompleted);
+							progressData.put("stepCount", currentStepCount);
+
+							// Include new steps
+							if (agentSequence != null && currentStepCount > lastStepCount[0]) {
+								List<AgentExecutionRecord> newSteps = agentSequence.subList(lastStepCount[0], currentStepCount);
+								progressData.put("newSteps", newSteps);
+								lastStepCount[0] = currentStepCount;
+							}
+
+							emitter.send(SseEmitter.event().data(objectMapper.writeValueAsString(progressData)));
+							lastCompleted[0] = isCompleted;
+
+							logger.debug("Sent progress update for planId {}: stepCount={}, completed={}",
+									planId, currentStepCount, isCompleted);
+						}
+
+						// Send completion event and close stream
+						if (isCompleted) {
+							// Extract final result
+							String lastToolCallResult = extractLastToolCallResult(planRecord);
+							if (lastToolCallResult != null) {
+								planRecord.setStructureResult(lastToolCallResult);
+							}
+
+							Map<String, Object> doneData = new HashMap<>();
+							doneData.put("type", "done");
+							doneData.put("planId", planId);
+							doneData.put("finalResult", planRecord.getStructureResult());
+							emitter.send(SseEmitter.event().data(objectMapper.writeValueAsString(doneData)));
+							emitter.complete();
+							logger.info("Task completed for planId: {}", planId);
+							break;
+						}
+
+						// Wait before next poll (1 second)
+						Thread.sleep(1000);
+
+					} catch (InterruptedException e) {
+						logger.warn("Polling interrupted for planId: {}", planId);
+						emitter.complete();
+						break;
+					} catch (Exception e) {
+						logger.error("Error polling execution status for planId: {}", planId, e);
+						Map<String, Object> errorData = new HashMap<>();
+						errorData.put("type", "error");
+						errorData.put("message", "Error polling status: " + e.getMessage());
+						emitter.send(SseEmitter.event().data(objectMapper.writeValueAsString(errorData)));
+						emitter.completeWithError(e);
+						break;
+					}
+				}
+
+			} catch (Exception e) {
+				logger.error("Failed to set up SSE stream for planId: {}", planId, e);
+				try {
+					Map<String, Object> errorData = new HashMap<>();
+					errorData.put("type", "error");
+					errorData.put("message", "Failed to set up stream: " + e.getMessage());
+					emitter.send(SseEmitter.event().data(objectMapper.writeValueAsString(errorData)));
+					emitter.completeWithError(e);
+				} catch (Exception ex) {
+					emitter.completeWithError(ex);
+				}
+			}
+		});
+
+		return emitter;
+	}
+
 }
